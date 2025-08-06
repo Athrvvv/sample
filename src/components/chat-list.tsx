@@ -21,12 +21,18 @@ export function ChatList({ messages }: ChatListProps) {
     return null;
   }
 
+  // Filter out the initial welcome message if a user has sent a message
+  const filteredMessages = messages.length > 1 && messages[0].role === 'assistant' 
+    ? messages.slice(1)
+    : messages;
+
+
   return (
     <div
       ref={listRef}
-      className="flex flex-col gap-4 p-4 max-w-4xl mx-auto"
+      className="flex flex-col gap-4 p-4 max-w-4xl mx-auto pt-24 pb-12"
     >
-      {messages.map((message) => (
+      {filteredMessages.map((message) => (
         <ChatMessage key={message.id} message={message} />
       ))}
     </div>

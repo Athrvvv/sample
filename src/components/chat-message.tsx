@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 import type { ChatMessage } from '@/lib/types';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Bot, User } from 'lucide-react';
 import Image from 'next/image';
 
@@ -15,14 +15,20 @@ const LoadingIndicator = () => (
 export function ChatMessage({ message }: { message: ChatMessage }) {
   const isAssistant = message.role === 'assistant';
 
+  if (message.content === "Hello! I'm PocketAI. How can I assist you today? You can ask me to generate images by starting your prompt with 'generate an image of...'") {
+    return null;
+  }
+
   return (
     <div
-      className={cn('flex items-start gap-3', {
+      className={cn('flex items-start gap-4', {
+        'justify-start': isAssistant,
         'justify-end': !isAssistant,
       })}
     >
       {isAssistant && (
         <Avatar className="h-8 w-8 bg-card border">
+           <AvatarImage src="https://placehold.co/32x32/28282f/94a3b8.png" alt="PocketAI" data-ai-hint="logo robot" />
           <AvatarFallback className="bg-transparent">
             <Bot className="h-5 w-5 text-foreground" />
           </AvatarFallback>

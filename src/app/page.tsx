@@ -21,7 +21,7 @@ export default function Home() {
   const [chatHistory, setChatHistory] = React.useState<ChatHistory>({});
   const [activeChatId, setActiveChatId] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
-  const { setOpenMobile } = useSidebar();
+  const { setOpenMobile, state: sidebarState } = useSidebar();
 
   React.useEffect(() => {
     const savedHistory = localStorage.getItem('chatHistory');
@@ -49,7 +49,7 @@ export default function Home() {
   }, [activeChatId]);
 
   const messages = activeChatId ? chatHistory[activeChatId] || [] : [];
-  const isNewChat = messages.length === 0;
+  const isNewChat = messages.length <= 1;
 
   const handleNewChat = () => {
     const newId = crypto.randomUUID();
@@ -94,6 +94,19 @@ export default function Home() {
       type: 'text',
     };
 
+    // If it's a new chat, replace the welcome message with the user's message
+    const newChatHistory = isNewChat
+    ? {
+        ...chatHistory,
+        [activeChatId]: [userMessage],
+      }
+    : {
+        ...chatHistory,
+        [activeChatId]: [...(chatHistory[activeChatId] || []), userMessage],
+      };
+
+    setChatHistory(newChatHistory);
+    
     const loadingMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'assistant',
@@ -103,7 +116,7 @@ export default function Home() {
 
     setChatHistory(prev => ({
       ...prev,
-      [activeChatId]: [...(prev[activeChatId] || []), userMessage, loadingMessage],
+      [activeChatId]: [...(prev[activeChatId] || []), loadingMessage],
     }));
     setIsLoading(true);
 
@@ -161,7 +174,7 @@ export default function Home() {
   };
   
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-background text-foreground">
       <SidebarContent 
         chatHistory={chatHistory}
         activeChatId={activeChatId}
@@ -169,24 +182,19 @@ export default function Home() {
         onSelectChat={handleSelectChat}
         onDeleteChat={handleDeleteChat}
       />
-      <div className="flex flex-col flex-1">
+      <div className={cn("flex flex-col flex-1 transition-all duration-300", sidebarState === 'expanded' ? 'md:ml-64' : 'md:ml-16')}>
         <Header />
-        <main className={cn(
-          "flex-1 overflow-y-auto transition-all duration-500",
-          isNewChat ? "flex items-center justify-center pt-0" : "pt-20 pb-28"
-        )}>
+        <main className="flex-1 overflow-y-auto">
           {isNewChat ? (
-            <div className="text-center text-foreground/50 text-lg">
-              Start a new conversation
+            <div className="flex flex-col items-center justify-center h-full text-center text-foreground/80">
+                <h1 className="text-4xl font-semibold">PocketAI</h1>
+                <p className="mt-2 text-lg">Ready when you are.</p>
             </div>
           ) : (
             <ChatList messages={messages} />
           )}
         </main>
-        <footer className={cn(
-            "w-full transition-all duration-500",
-            isNewChat ? "fixed bottom-1/2 translate-y-1/2" : "fixed bottom-0 left-0 right-0",
-          )}>
+        <footer className="w-full">
           <ChatInput onSend={handleSend} isLoading={isLoading} />
         </footer>
       </div>
