@@ -8,28 +8,84 @@ import type { ChatMessage } from '@/lib/types';
 import { Header } from '@/components/header';
 import { ChatList } from '@/components/chat-list';
 import { ChatInput } from '@/components/chat-input';
+import { useSidebar } from '@/components/ui/sidebar';
+import { cn } from '@/lib/utils';
+import { SidebarContent } from '@/components/sidebar-content';
+
+type ChatHistory = {
+  [id: string]: ChatMessage[];
+};
 
 export default function Home() {
   const { toast } = useToast();
-  const [messages, setMessages] = React.useState<ChatMessage[]>([]);
+  const [chatHistory, setChatHistory] = React.useState<ChatHistory>({});
+  const [activeChatId, setActiveChatId] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
+  const { setOpenMobile } = useSidebar();
 
   React.useEffect(() => {
-    // crypto.randomUUID is only available in secure contexts (HTTPS) or on the client.
-    if (typeof window !== 'undefined') {
-      setMessages([
-        {
-          id: crypto.randomUUID(),
-          role: 'assistant',
-          content: "Hello! I'm PocketAI. How can I assist you today? You can ask me to generate images by starting your prompt with 'generate an image of...'",
-          type: 'text',
-        },
-      ]);
+    const savedHistory = localStorage.getItem('chatHistory');
+    if (savedHistory) {
+      setChatHistory(JSON.parse(savedHistory));
+    }
+    const savedActiveId = localStorage.getItem('activeChatId');
+    if (savedActiveId) {
+      setActiveChatId(savedActiveId);
+    } else {
+      handleNewChat();
     }
   }, []);
 
+  React.useEffect(() => {
+    if (Object.keys(chatHistory).length > 0) {
+      localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+    }
+  }, [chatHistory]);
+
+  React.useEffect(() => {
+    if (activeChatId) {
+      localStorage.setItem('activeChatId', activeChatId);
+    }
+  }, [activeChatId]);
+
+  const messages = activeChatId ? chatHistory[activeChatId] || [] : [];
+  const isNewChat = messages.length === 0;
+
+  const handleNewChat = () => {
+    const newId = crypto.randomUUID();
+    const welcomeMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: 'assistant',
+      content: "Hello! I'm PocketAI. How can I assist you today? You can ask me to generate images by starting your prompt with 'generate an image of...'",
+      type: 'text',
+    };
+    setChatHistory(prev => ({ ...prev, [newId]: [welcomeMessage] }));
+    setActiveChatId(newId);
+    setOpenMobile(false);
+  };
+
+  const handleSelectChat = (id: string) => {
+    setActiveChatId(id);
+    setOpenMobile(false);
+  };
+  
+  const handleDeleteChat = (id: string) => {
+    const newHistory = { ...chatHistory };
+    delete newHistory[id];
+    setChatHistory(newHistory);
+    if (activeChatId === id) {
+      const remainingIds = Object.keys(newHistory);
+      if (remainingIds.length > 0) {
+        setActiveChatId(remainingIds[0]);
+      } else {
+        handleNewChat();
+      }
+    }
+    localStorage.removeItem('chatHistory');
+  };
+
   const handleSend = async (content: string) => {
-    if (isLoading) return;
+    if (isLoading || !activeChatId) return;
 
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
@@ -37,8 +93,6 @@ export default function Home() {
       content,
       type: 'text',
     };
-    
-    setIsLoading(true);
 
     const loadingMessage: ChatMessage = {
       id: crypto.randomUUID(),
@@ -46,7 +100,12 @@ export default function Home() {
       content: '',
       type: 'loading',
     };
-    setMessages(prev => [...prev, userMessage, loadingMessage]);
+
+    setChatHistory(prev => ({
+      ...prev,
+      [activeChatId]: [...(prev[activeChatId] || []), userMessage, loadingMessage],
+    }));
+    setIsLoading(true);
 
     try {
       let assistantMessage: ChatMessage;
@@ -69,7 +128,13 @@ export default function Home() {
           type: 'text',
         };
       }
-      setMessages(prev => [...prev.slice(0, -1), assistantMessage]);
+      setChatHistory(prev => {
+        const currentChat = prev[activeChatId] || [];
+        return {
+          ...prev,
+          [activeChatId]: [...currentChat.slice(0, -1), assistantMessage],
+        };
+      });
     } catch (error) {
       console.error(error);
       const errorMessage: ChatMessage = {
@@ -78,7 +143,13 @@ export default function Home() {
         content: 'Sorry, I encountered an error. Please try again.',
         type: 'text',
       };
-      setMessages(prev => [...prev.slice(0, -1), errorMessage]);
+      setChatHistory(prev => {
+        const currentChat = prev[activeChatId] || [];
+        return {
+          ...prev,
+          [activeChatId]: [...currentChat.slice(0, -1), errorMessage],
+        };
+      });
       toast({
         title: 'Error',
         description: 'Failed to get a response from the AI.',
@@ -88,16 +159,37 @@ export default function Home() {
       setIsLoading(false);
     }
   };
-
+  
   return (
-    <div className="flex flex-col h-screen bg-background">
-      <Header />
-      <main className="flex-1 overflow-y-auto pt-20 pb-28">
-        <ChatList messages={messages} />
-      </main>
-      <footer className="fixed bottom-0 left-0 right-0 w-full">
-        <ChatInput onSend={handleSend} isLoading={isLoading} />
-      </footer>
+    <div className="flex h-screen bg-background">
+      <SidebarContent 
+        chatHistory={chatHistory}
+        activeChatId={activeChatId}
+        onNewChat={handleNewChat}
+        onSelectChat={handleSelectChat}
+        onDeleteChat={handleDeleteChat}
+      />
+      <div className="flex flex-col flex-1">
+        <Header />
+        <main className={cn(
+          "flex-1 overflow-y-auto transition-all duration-500",
+          isNewChat ? "flex items-center justify-center pt-0" : "pt-20 pb-28"
+        )}>
+          {isNewChat ? (
+            <div className="text-center text-foreground/50 text-lg">
+              Start a new conversation
+            </div>
+          ) : (
+            <ChatList messages={messages} />
+          )}
+        </main>
+        <footer className={cn(
+            "w-full transition-all duration-500",
+            isNewChat ? "fixed bottom-1/2 translate-y-1/2" : "fixed bottom-0 left-0 right-0",
+          )}>
+          <ChatInput onSend={handleSend} isLoading={isLoading} />
+        </footer>
+      </div>
     </div>
   );
 }
