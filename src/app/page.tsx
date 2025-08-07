@@ -183,26 +183,26 @@ export default function Home() {
       />
       <div className={cn("flex flex-col flex-1 transition-all duration-300 ease-in-out", sidebarState === 'expanded' ? 'md:ml-64' : 'md:ml-16')}>
         <Header />
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 flex flex-col overflow-y-auto">
             <div className={cn(
-                'transition-opacity duration-500',
+                'flex-1 transition-opacity duration-500',
                 isNewChat ? 'opacity-100' : 'opacity-0 h-0 pointer-events-none'
             )}>
-                <div className="flex flex-col items-center justify-center h-full text-center text-foreground/80 pt-24">
+                <div className="flex flex-col items-center justify-center h-full text-center text-foreground/80">
                     <h1 className="text-4xl font-semibold">PocketAI</h1>
                     <p className="mt-2 text-lg">Ready when you are.</p>
                 </div>
             </div>
             <div className={cn(
-                'transition-opacity duration-500',
+                'flex-1 transition-opacity duration-500 overflow-y-auto',
                 !isNewChat ? 'opacity-100' : 'opacity-0 h-0 pointer-events-none'
             )}>
                 <ChatList messages={messages} />
             </div>
+            <div className="w-full">
+              <ChatInput onSend={handleSend} isLoading={isLoading} />
+            </div>
         </main>
-        <footer className="w-full">
-          <ChatInput onSend={handleSend} isLoading={isLoading} />
-        </footer>
       </div>
     </div>
   );

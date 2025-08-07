@@ -26,7 +26,7 @@ export function ChatList({ messages }: ChatListProps) {
   return (
     <div
       ref={listRef}
-      className="flex flex-col gap-4 p-4 max-w-4xl mx-auto pt-24 pb-12"
+      className="flex flex-col gap-4 p-4 max-w-4xl mx-auto"
     >
       {filteredMessages.map((message, index) => (
         <ChatMessage key={message.id} message={message} index={index}/>
