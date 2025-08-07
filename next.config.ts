@@ -24,16 +24,6 @@ const nextConfig: NextConfig = {
       }
     ],
   },
-  devSwSrc: './src/lib/dev-sw.ts',
-  experimental: {
-    // This is needed to support cross-origin requests in development.
-    // The dev server is on a different port than the app preview.
-    allowedDevOrigins: [
-        'http://localhost:6000',
-        'https://*.cloudworkstations.dev',
-        'https://*.firebase.studio'
-    ],
-  },
 };
 
 export default nextConfig;
