@@ -12,12 +12,15 @@ interface ChatInputProps {
 
 export function ChatInput({ onSend, isLoading }: ChatInputProps) {
   const [input, setInput] = React.useState('');
+  const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleSend = () => {
     if (input.trim() && !isLoading) {
       onSend(input.trim());
       setInput('');
+      setSelectedFile(null);
     }
   };
 
@@ -26,6 +29,20 @@ export function ChatInput({ onSend, isLoading }: ChatInputProps) {
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      console.log('Selected file:', file.name);
+      // We can add more logic here to handle the file upload,
+      // like showing a preview or sending it to the server.
+    }
+  };
+
+  const handleAddFileClick = () => {
+    fileInputRef.current?.click();
   };
   
   React.useEffect(() => {
@@ -39,7 +56,13 @@ export function ChatInput({ onSend, isLoading }: ChatInputProps) {
   return (
     <div className="max-w-4xl mx-auto p-4">
       <div className="relative flex items-center">
-        <Button variant="ghost" size="icon" className="absolute left-2 text-foreground/60">
+        <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+        />
+        <Button variant="ghost" size="icon" className="absolute left-2 text-foreground/60" onClick={handleAddFileClick}>
             <Plus className="h-5 w-5" />
             <span className="sr-only">Add file</span>
         </Button>
@@ -48,7 +71,7 @@ export function ChatInput({ onSend, isLoading }: ChatInputProps) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask anything..."
+          placeholder={selectedFile ? selectedFile.name : "Ask anything..."}
           className="flex-1 resize-none max-h-40 min-h-[52px] overflow-y-auto rounded-full border border-border bg-input pl-12 pr-12 py-3.5"
           rows={1}
           disabled={isLoading}
