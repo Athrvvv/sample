@@ -1,24 +1,23 @@
-// This file was created to implement a custom hook for managing user authentication state throughout the application.
 'use client';
 
 import * as React from 'react';
 import {
   getAuth,
   onAuthStateChanged,
-  GoogleAuthProvider,
-  signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   signOut,
   User,
 } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 
 const auth = getAuth(app);
-const provider = new GoogleAuthProvider();
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signIn: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<any>;
+  registerWithEmail: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<void>;
 }
 
@@ -36,14 +35,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const signIn = async () => {
+  const signInWithEmail = async (email: string, password: string) => {
     setLoading(true);
     try {
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error('Error signing in with Google', error);
+      return await signInWithEmailAndPassword(auth, email, password);
     } finally {
-        setLoading(false);
+      setLoading(false);
+    }
+  };
+  
+  const registerWithEmail = async (email: string, password: string) => {
+    setLoading(true);
+    try {
+      return await createUserWithEmailAndPassword(auth, email, password);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -58,7 +64,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value = {
     user,
     loading,
-    signIn,
+    signInWithEmail,
+    registerWithEmail,
     signOut: signOutUser,
   };
 

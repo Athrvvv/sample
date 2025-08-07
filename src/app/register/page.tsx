@@ -1,4 +1,4 @@
-// This file was created to provide a dedicated sign-in page for users to authenticate with their email and password.
+// This file was created to provide a registration page for new users.
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -11,8 +11,8 @@ import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 
-export default function LoginPage() {
-  const { user, signInWithEmail, loading } = useAuth();
+export default function RegisterPage() {
+  const { user, registerWithEmail, loading } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
@@ -24,16 +24,16 @@ export default function LoginPage() {
     }
   }, [user, router]);
 
-  const handleSignIn = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await signInWithEmail(email, password);
+      await registerWithEmail(email, password);
       router.push('/');
     } catch (error: any) {
-      console.error('Sign in error', error.message);
+      console.error('Registration error', error.message);
       toast({
-        title: 'Sign In Failed',
-        description: error.message || 'Please check your credentials and try again.',
+        title: 'Registration Failed',
+        description: error.message || 'Please try again.',
         variant: 'destructive',
       });
     }
@@ -42,9 +42,9 @@ export default function LoginPage() {
   if (loading) {
     return <div className="flex h-screen w-full items-center justify-center bg-background"><p>Loading...</p></div>;
   }
-
+  
   if (user) {
-      return null;
+    return null;
   }
 
   return (
@@ -52,10 +52,10 @@ export default function LoginPage() {
         <div className="w-full max-w-sm p-8 space-y-6">
             <div className="flex flex-col items-center text-center">
                 <Bot className="h-12 w-12 mb-4" />
-                <h1 className="text-4xl font-semibold mb-2">Welcome Back</h1>
-                <p className="text-lg text-foreground/80">Sign in to continue to PocketAI.</p>
+                <h1 className="text-4xl font-semibold mb-2">Create an Account</h1>
+                <p className="text-lg text-foreground/80">Get started with your personal AI assistant.</p>
             </div>
-            <form onSubmit={handleSignIn} className="space-y-4">
+            <form onSubmit={handleRegister} className="space-y-4">
                 <div>
                     <Label htmlFor="email">Email</Label>
                     <Input
@@ -81,13 +81,13 @@ export default function LoginPage() {
                     />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 'Signing In...' : 'Sign In'}
+                    {loading ? 'Creating Account...' : 'Create Account'}
                 </Button>
             </form>
             <p className="text-center text-sm text-foreground/80">
-                Don't have an account?{' '}
-                <Link href="/register" className="font-medium text-primary hover:underline">
-                    Sign up
+                Already have an account?{' '}
+                <Link href="/login" className="font-medium text-primary hover:underline">
+                    Sign in
                 </Link>
             </p>
       </div>
