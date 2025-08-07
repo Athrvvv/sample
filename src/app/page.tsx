@@ -11,6 +11,9 @@ import { ChatInput } from '@/components/chat-input';
 import { useSidebar } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import { SidebarContent } from '@/components/sidebar-content';
+import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 type ChatHistory = {
   [id: string]: ChatMessage[];
@@ -18,35 +21,47 @@ type ChatHistory = {
 
 export default function Home() {
   const { toast } = useToast();
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
   const [chatHistory, setChatHistory] = React.useState<ChatHistory>({});
   const [activeChatId, setActiveChatId] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
   const { setOpenMobile, state: sidebarState } = useSidebar();
 
-  React.useEffect(() => {
-    const savedHistory = localStorage.getItem('chatHistory');
-    if (savedHistory) {
-      setChatHistory(JSON.parse(savedHistory));
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
     }
-    const savedActiveId = localStorage.getItem('activeChatId');
-    if (savedActiveId) {
-      setActiveChatId(savedActiveId);
-    } else {
-      handleNewChat();
-    }
-  }, []);
+  }, [user, loading, router]);
+
 
   React.useEffect(() => {
-    if (Object.keys(chatHistory).length > 0) {
-      localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+    if (user) {
+        const savedHistory = localStorage.getItem(`chatHistory_${user.uid}`);
+        if (savedHistory) {
+            setChatHistory(JSON.parse(savedHistory));
+        }
+        const savedActiveId = localStorage.getItem(`activeChatId_${user.uid}`);
+        if (savedActiveId) {
+            setActiveChatId(savedActiveId);
+        } else {
+            handleNewChat();
+        }
     }
-  }, [chatHistory]);
+  }, [user]);
 
   React.useEffect(() => {
-    if (activeChatId) {
-      localStorage.setItem('activeChatId', activeChatId);
+    if (user && Object.keys(chatHistory).length > 0) {
+      localStorage.setItem(`chatHistory_${user.uid}`, JSON.stringify(chatHistory));
     }
-  }, [activeChatId]);
+  }, [chatHistory, user]);
+
+  React.useEffect(() => {
+    if (user && activeChatId) {
+      localStorage.setItem(`activeChatId_${user.uid}`, activeChatId);
+    }
+  }, [activeChatId, user]);
 
   const messages = activeChatId ? chatHistory[activeChatId] || [] : [];
   const isNewChat = messages.length <= 1;
@@ -81,8 +96,8 @@ export default function Home() {
         handleNewChat();
       }
     }
-    if(Object.keys(newHistory).length === 0) {
-      localStorage.removeItem('chatHistory');
+    if(user && Object.keys(newHistory).length === 0) {
+      localStorage.removeItem(`chatHistory_${user.uid}`);
     }
   };
 
@@ -170,6 +185,10 @@ export default function Home() {
       setIsLoading(false);
     }
   };
+
+  if (loading || !user) {
+    return <div className="flex h-screen w-full items-center justify-center bg-background"><p>Loading...</p></div>;
+  }
   
   return (
     <div className="flex h-screen bg-background text-foreground">
