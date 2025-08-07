@@ -21,14 +21,12 @@ export function ChatList({ messages }: ChatListProps) {
     return null;
   }
   
-  const filteredMessages = messages.filter(m => m.content !== "Hello! I'm PocketAI. How can I assist you today? You can ask me to generate images by starting your prompt with 'generate an image of...'");
-
   return (
     <div
       ref={listRef}
       className="flex flex-col gap-4 p-4 max-w-4xl mx-auto"
     >
-      {filteredMessages.map((message, index) => (
+      {messages.map((message, index) => (
         <ChatMessage key={message.id} message={message} index={index}/>
       ))}
     </div>

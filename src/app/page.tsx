@@ -98,8 +98,7 @@ export default function Home() {
 
     const currentChat = chatHistory[activeChatId] || [];
 
-    // If it's a new chat, the first message is the user's message
-    const updatedMessages = isNewChat ? [userMessage] : [...currentChat, userMessage];
+    const updatedMessages = isNewChat ? [userMessage] : [...currentChat.filter(m => m.type !== 'text' || m.content !== "Hello! I'm PocketAI. How can I assist you today? You can ask me to generate images by starting your prompt with 'generate an image of...'"), userMessage];
 
     setChatHistory(prev => ({
         ...prev,
@@ -183,21 +182,16 @@ export default function Home() {
       />
       <div className={cn("flex flex-col flex-1 transition-all duration-300 ease-in-out", sidebarState === 'expanded' ? 'md:ml-64' : 'md:ml-16')}>
         <Header />
-        <main className="flex-1 flex flex-col overflow-y-auto">
-            <div className={cn(
-                'flex-1 transition-opacity duration-500',
-                isNewChat ? 'opacity-100' : 'opacity-0 h-0 pointer-events-none'
-            )}>
+        <main className="flex-1 flex flex-col pt-16">
+          <div className="flex-1 overflow-y-auto">
+            {isNewChat ? (
                 <div className="flex flex-col items-center justify-center h-full text-center text-foreground/80">
                     <h1 className="text-4xl font-semibold">PocketAI</h1>
                     <p className="mt-2 text-lg">Ready when you are.</p>
                 </div>
-            </div>
-            <div className={cn(
-                'flex-1 transition-opacity duration-500 overflow-y-auto',
-                !isNewChat ? 'opacity-100' : 'opacity-0 h-0 pointer-events-none'
-            )}>
+            ) : (
                 <ChatList messages={messages} />
+            )}
             </div>
             <div className="w-full">
               <ChatInput onSend={handleSend} isLoading={isLoading} />
