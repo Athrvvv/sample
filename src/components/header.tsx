@@ -1,5 +1,4 @@
 import { SidebarTrigger } from './ui/sidebar';
-import { Button } from './ui/button';
 
 export function Header() {
   return (
@@ -9,9 +8,6 @@ export function Header() {
             <SidebarTrigger />
             <h1 className="text-lg font-semibold text-foreground">PocketAI</h1>
         </div>
-        <Button variant="outline" size="sm">
-            Upgrade
-        </Button>
       </div>
     </header>
   );

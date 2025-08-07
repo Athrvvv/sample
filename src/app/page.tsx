@@ -81,7 +81,9 @@ export default function Home() {
         handleNewChat();
       }
     }
-    localStorage.removeItem('chatHistory');
+    if(Object.keys(newHistory).length === 0) {
+      localStorage.removeItem('chatHistory');
+    }
   };
 
   const handleSend = async (content: string) => {
@@ -94,18 +96,15 @@ export default function Home() {
       type: 'text',
     };
 
-    // If it's a new chat, replace the welcome message with the user's message
-    const newChatHistory = isNewChat
-    ? {
-        ...chatHistory,
-        [activeChatId]: [userMessage],
-      }
-    : {
-        ...chatHistory,
-        [activeChatId]: [...(chatHistory[activeChatId] || []), userMessage],
-      };
+    const currentChat = chatHistory[activeChatId] || [];
 
-    setChatHistory(newChatHistory);
+    // If it's a new chat, the first message is the user's message
+    const updatedMessages = isNewChat ? [userMessage] : [...currentChat, userMessage];
+
+    setChatHistory(prev => ({
+        ...prev,
+        [activeChatId]: updatedMessages,
+    }));
     
     const loadingMessage: ChatMessage = {
       id: crypto.randomUUID(),
@@ -182,17 +181,24 @@ export default function Home() {
         onSelectChat={handleSelectChat}
         onDeleteChat={handleDeleteChat}
       />
-      <div className={cn("flex flex-col flex-1 transition-all duration-300", sidebarState === 'expanded' ? 'md:ml-64' : 'md:ml-16')}>
+      <div className={cn("flex flex-col flex-1 transition-all duration-300 ease-in-out", sidebarState === 'expanded' ? 'md:ml-64' : 'md:ml-16')}>
         <Header />
         <main className="flex-1 overflow-y-auto">
-          {isNewChat ? (
-            <div className="flex flex-col items-center justify-center h-full text-center text-foreground/80">
-                <h1 className="text-4xl font-semibold">PocketAI</h1>
-                <p className="mt-2 text-lg">Ready when you are.</p>
+            <div className={cn(
+                'transition-opacity duration-500',
+                isNewChat ? 'opacity-100' : 'opacity-0 h-0 pointer-events-none'
+            )}>
+                <div className="flex flex-col items-center justify-center h-full text-center text-foreground/80 pt-24">
+                    <h1 className="text-4xl font-semibold">PocketAI</h1>
+                    <p className="mt-2 text-lg">Ready when you are.</p>
+                </div>
             </div>
-          ) : (
-            <ChatList messages={messages} />
-          )}
+            <div className={cn(
+                'transition-opacity duration-500',
+                !isNewChat ? 'opacity-100' : 'opacity-0 h-0 pointer-events-none'
+            )}>
+                <ChatList messages={messages} />
+            </div>
         </main>
         <footer className="w-full">
           <ChatInput onSend={handleSend} isLoading={isLoading} />

@@ -12,7 +12,7 @@ const LoadingIndicator = () => (
   </div>
 );
 
-export function ChatMessage({ message }: { message: ChatMessage }) {
+export function ChatMessage({ message, index }: { message: ChatMessage, index: number }) {
   const isAssistant = message.role === 'assistant';
 
   if (message.content === "Hello! I'm PocketAI. How can I assist you today? You can ask me to generate images by starting your prompt with 'generate an image of...'") {
@@ -21,10 +21,11 @@ export function ChatMessage({ message }: { message: ChatMessage }) {
 
   return (
     <div
-      className={cn('flex items-start gap-4', {
+      className={cn('flex items-start gap-4 animate-message-in', {
         'justify-start': isAssistant,
         'justify-end': !isAssistant,
       })}
+      style={{ animationDelay: `${index * 100}ms` }}
     >
       {isAssistant && (
         <Avatar className="h-8 w-8 bg-card border">

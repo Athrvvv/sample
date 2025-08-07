@@ -20,20 +20,16 @@ export function ChatList({ messages }: ChatListProps) {
   if (!messages.length) {
     return null;
   }
-
-  // Filter out the initial welcome message if a user has sent a message
-  const filteredMessages = messages.length > 1 && messages[0].role === 'assistant' 
-    ? messages.slice(1)
-    : messages;
-
+  
+  const filteredMessages = messages.filter(m => m.content !== "Hello! I'm PocketAI. How can I assist you today? You can ask me to generate images by starting your prompt with 'generate an image of...'");
 
   return (
     <div
       ref={listRef}
       className="flex flex-col gap-4 p-4 max-w-4xl mx-auto pt-24 pb-12"
     >
-      {filteredMessages.map((message) => (
-        <ChatMessage key={message.id} message={message} />
+      {filteredMessages.map((message, index) => (
+        <ChatMessage key={message.id} message={message} index={index}/>
       ))}
     </div>
   );
