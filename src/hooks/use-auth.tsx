@@ -2,16 +2,13 @@
 
 import * as React from 'react';
 import {
-  getAuth,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
   User,
 } from 'firebase/auth';
-import { app } from '@/lib/firebase';
-
-const auth = getAuth(app);
+import { auth } from '@/lib/firebase';
 
 interface AuthContextType {
   user: User | null;

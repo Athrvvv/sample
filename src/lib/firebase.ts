@@ -1,5 +1,8 @@
 // Implemented Firebase configuration and initialization to connect the app with Firebase services.
 import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { config } from 'dotenv';
+config();
 
 const firebaseConfig = {
   projectId: "pocketai-e4n6o",
@@ -11,6 +14,7 @@ const firebaseConfig = {
   messagingSenderId: "214335210694"
 };
 
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
-export { app };
+export { app, auth };
