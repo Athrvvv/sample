@@ -11,9 +11,6 @@ import { ChatInput } from '@/components/chat-input';
 import { useSidebar } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import { SidebarContent } from '@/components/sidebar-content';
-import { useAuth } from '@/hooks/use-auth';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 
 type ChatHistory = {
   [id: string]: ChatMessage[];
@@ -21,47 +18,48 @@ type ChatHistory = {
 
 export default function Home() {
   const { toast } = useToast();
-  const { user, loading } = useAuth();
-  const router = useRouter();
-
   const [chatHistory, setChatHistory] = React.useState<ChatHistory>({});
   const [activeChatId, setActiveChatId] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
   const { setOpenMobile, state: sidebarState } = useSidebar();
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
-  }, [user, loading, router]);
-
-
   React.useEffect(() => {
-    if (user) {
-        const savedHistory = localStorage.getItem(`chatHistory_${user.uid}`);
-        if (savedHistory) {
-            setChatHistory(JSON.parse(savedHistory));
-        }
-        const savedActiveId = localStorage.getItem(`activeChatId_${user.uid}`);
-        if (savedActiveId) {
-            setActiveChatId(savedActiveId);
+    const savedHistory = localStorage.getItem('chatHistory');
+    const savedActiveId = localStorage.getItem('activeChatId');
+    
+    if (savedHistory) {
+      setChatHistory(JSON.parse(savedHistory));
+      if (savedActiveId) {
+        setActiveChatId(savedActiveId);
+      } else {
+        // If there's history but no active chat, set the first one as active
+        const historyKeys = Object.keys(JSON.parse(savedHistory));
+        if (historyKeys.length > 0) {
+          setActiveChatId(historyKeys[0]);
         } else {
-            handleNewChat();
+          handleNewChat();
         }
+      }
+    } else {
+      handleNewChat();
     }
-  }, [user]);
+  }, []);
 
   React.useEffect(() => {
-    if (user && Object.keys(chatHistory).length > 0) {
-      localStorage.setItem(`chatHistory_${user.uid}`, JSON.stringify(chatHistory));
+    if (Object.keys(chatHistory).length > 0) {
+      localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+    } else {
+      localStorage.removeItem('chatHistory');
     }
-  }, [chatHistory, user]);
+  }, [chatHistory]);
 
   React.useEffect(() => {
-    if (user && activeChatId) {
-      localStorage.setItem(`activeChatId_${user.uid}`, activeChatId);
+    if (activeChatId) {
+      localStorage.setItem('activeChatId', activeChatId);
+    } else {
+      localStorage.removeItem('activeChatId');
     }
-  }, [activeChatId, user]);
+  }, [activeChatId]);
 
   const messages = activeChatId ? chatHistory[activeChatId] || [] : [];
   const isNewChat = messages.length <= 1;
@@ -88,16 +86,15 @@ export default function Home() {
     const newHistory = { ...chatHistory };
     delete newHistory[id];
     setChatHistory(newHistory);
+    
     if (activeChatId === id) {
       const remainingIds = Object.keys(newHistory);
       if (remainingIds.length > 0) {
         setActiveChatId(remainingIds[0]);
       } else {
+        setActiveChatId(null);
         handleNewChat();
       }
-    }
-    if(user && Object.keys(newHistory).length === 0) {
-      localStorage.removeItem(`chatHistory_${user.uid}`);
     }
   };
 
@@ -185,10 +182,6 @@ export default function Home() {
       setIsLoading(false);
     }
   };
-
-  if (loading || !user) {
-    return <div className="flex h-screen w-full items-center justify-center bg-background"><p>Loading...</p></div>;
-  }
   
   return (
     <div className="flex h-screen bg-background text-foreground">
@@ -203,7 +196,7 @@ export default function Home() {
         <Header />
         <main className="flex-1 flex flex-col pt-16">
           <div className="flex-1 overflow-y-auto">
-            {isNewChat ? (
+            {isNewChat || !activeChatId ? (
                 <div className="flex flex-col items-center justify-center h-full text-center text-foreground/80">
                     <h1 className="text-4xl font-semibold">PocketAI</h1>
                     <p className="mt-2 text-lg">Ready when you are.</p>

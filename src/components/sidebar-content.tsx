@@ -1,6 +1,6 @@
 'use client';
 
-import { Plus, MessageSquare, Trash2, Edit, LogOut } from 'lucide-react';
+import { Plus, MessageSquare, Trash2, Edit } from 'lucide-react';
 import {
   Sidebar,
   SidebarHeader,
@@ -14,10 +14,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from './ui/button';
 import type { ChatMessage } from '@/lib/types';
-import { cn } from '@/lib/utils';
 import { ScrollArea } from './ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { useAuth } from '@/hooks/use-auth';
 
 type ChatHistory = {
   [id: string]: ChatMessage[];
@@ -38,17 +35,12 @@ export function SidebarContent({
   onSelectChat,
   onDeleteChat,
 }: SidebarContentProps) {
-    const { user, signOut } = useAuth();
   const getChatTitle = (messages: ChatMessage[]) => {
-    if (messages.length > 1) {
+    if (messages.length > 0) {
       const userMessage = messages.find(m => m.role === 'user');
       if (userMessage) {
         return userMessage.content.substring(0, 25);
       }
-    }
-    const assistantMessage = messages.find(m => m.role === 'assistant' && m.type === 'text');
-    if (assistantMessage && assistantMessage.content) {
-        return 'New Chat';
     }
     return 'New Chat';
   };
@@ -100,21 +92,6 @@ export function SidebarContent({
         </SidebarMainContent>
       </ScrollArea>
       <SidebarFooter>
-        {user && (
-            <div className="flex items-center gap-2 p-2">
-                <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.photoURL || `https://placehold.co/32x32/7c3aed/ffffff.png`} alt={user.displayName || "User"} data-ai-hint="user avatar" />
-                    <AvatarFallback>{user.displayName?.[0] || 'U'}</AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col flex-1 overflow-hidden">
-                    <span className="text-sm font-medium truncate">{user.displayName}</span>
-                    <span className="text-xs text-muted-foreground truncate">{user.email}</span>
-                </div>
-                <Button variant="ghost" size="icon" onClick={signOut} className="shrink-0">
-                    <LogOut className="h-4 w-4" />
-                </Button>
-            </div>
-        )}
       </SidebarFooter>
     </Sidebar>
   );
